@@ -1,0 +1,62 @@
+---
+title: "ms_4"
+author: "Tivas Gupta"
+date: "2/28/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+|
+```{r, warning = FALSE}
+
+# We will use this R chunk to load and clean the data that I will use for the
+# project. First I will load the inequality data.
+
+library(readr)
+library(janitor)
+library(tidyverse)
+
+inequality <- read_csv("Income Inequality Data by Country.csv") %>%
+  clean_names() 
+
+
+#We need to tidy it so we can add populism data.
+
+tidy_inequality <- inequality %>%
+  pivot_longer(cols = -year, 
+               names_to = "Country Name", 
+               values_to = "Inequality Data") 
+
+#View(tidy_inequality)
+
+
+#Now we can load the populist 
+
+populist <- read_csv("speech_populist.csv") %>%
+  clean_names()
+
+location <- tidy_inequality %>%
+  mutate(`Country Name` = `Country Name` %>%
+                          substring(21)) %>%
+  mutate(`Country Name` = gsub( "_.*$", "_", `Country Name`)) %>%
+  mutate(`Country Name` = substr(`Country Name`, 
+                                 1, 
+                                 nchar(`Country Name`)-1)) %>%
+  mutate(`Country Name` = paste(toupper(substring(`Country Name`, 1,1)),
+                                (substring(`Country Name`, 2,nchar(`Country Name`))),
+                                 sep="")) %>%
+  rename(country = `Country Name`)
+
+new_populist = populist %>%
+  rename(year = yearbegin)
+#location
+?sub
+joined_data = full_join(new_populist, location, by = c("country", "year"))
+#View(populist)
+View(joined_data)
+
+ggplot(joined_data, aes(x = `Inequality Data`, y = totalaverage)) + geom_smooth()
+```
+
